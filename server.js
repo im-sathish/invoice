@@ -10,7 +10,7 @@ const path = require('path');
 const app = express();
 
 // Middleware to parse JSON data
-app.use(cors());
+app.use(cors(  origin: 'https://invoice-9fg7.onrender.com'));
 app.use(bodyParser.json());
 
 // MySQL Database connection
