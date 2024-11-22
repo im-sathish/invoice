@@ -20,13 +20,19 @@ app.use(bodyParser.json());
 //   password: 'root',  // Replace with your MySQL password
 //   database: 'company_db'      // Replace with your MySQL database name
 // });
-const db = mysql.createConnection({
-  host: process.env.DB_HOST, // Use the environment variable
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
+// const db = mysql.createConnection({
+//   host: process.env.DB_HOST, // Use the environment variable
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASS,
+//   database: process.env.DB_NAME,
+// });
+const connection = mysql.createConnection({
+  host: process.env.MYSQL_ADDON_HOST,
+  user: process.env.MYSQL_ADDON_USER,
+  password: process.env.MYSQL_ADDON_PASSWORD,
+  database: process.env.MYSQL_ADDON_DB,
+  port: process.env.MYSQL_ADDON_PORT
 });
-
 
 // Connect to MySQL
 db.connect((err) => {
