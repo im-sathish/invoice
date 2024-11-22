@@ -2,6 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+require('dotenv').config();
 
 const app = express();
 
@@ -10,13 +11,20 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // MySQL Database connection
+// const db = mysql.createConnection({
+//   host: 'localhost',     // Replace with your MySQL host
+//   port: 3306,            // Replace with your MySQL port
+//   user: 'root',          // Replace with your MySQL user
+//   password: 'root',  // Replace with your MySQL password
+//   database: 'company_db'      // Replace with your MySQL database name
+// });
 const db = mysql.createConnection({
-  host: 'localhost',     // Replace with your MySQL host
-  // port: 3302,            // Replace with your MySQL port
-  user: 'root',          // Replace with your MySQL user
-  password: 'root',  // Replace with your MySQL password
-  database: 'company_db'      // Replace with your MySQL database name
+  host: process.env.DB_HOST, // Use the environment variable
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
 });
+
 
 // Connect to MySQL
 db.connect((err) => {
@@ -85,8 +93,16 @@ app.get("/items", (req, res) => {
 //   });
 // });
 
+// Serve the React build folder
+app.use(express.static(path.join(__dirname, 'build')));
+
+// Fallback for React Router
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
+});
+
 // Start the server
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
