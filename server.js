@@ -1,19 +1,33 @@
+ 
 const express = require('express');
+require('dotenv').config();
 const mysql = require('mysql2');
-const bodyParser = require('body-parser');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 const path = require('path');
-require('dotenv').config();  // To load environment variables
+
 
 const app = express();
-const port = process.env.PORT || 5000;
 
-// Enable CORS for the React frontend
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',  // Update this with your React app URL
-}));
+// Middleware to parse JSON data
+app.use(cors());
+app.use(bodyParser.json());
 
 // MySQL Database connection
+// const db = mysql.createConnection({
+//   host: 'localhost',     // Replace with your MySQL host
+//   port: 3306,            // Replace with your MySQL port
+//   user: 'root',          // Replace with your MySQL user
+//   password: 'root',  // Replace with your MySQL password
+//   database: 'company_db'      // Replace with your MySQL database name
+// });
+// const db = mysql.createConnection({
+//   host: process.env.DB_HOST, // Use the environment variable
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASS,
+//   database: process.env.DB_NAME,
+// });
+  
 const db = mysql.createConnection({
   host: process.env.MYSQL_ADDON_HOST,
   user: process.env.MYSQL_ADDON_USER,
@@ -22,43 +36,73 @@ const db = mysql.createConnection({
   port: process.env.MYSQL_ADDON_PORT
 });
 
+// Connect to MySQL
 db.connect((err) => {
   if (err) {
-    console.error('Error connecting to MySQL:', err);
-    return;
+    console.log('Error connecting to MySQL:', err);
+  } else {
+    console.log('Connected to MySQL database');
   }
-  console.log('Connected to MySQL database');
 });
 
-// Middleware to parse incoming JSON requests
-app.use(express.json());
-
-// Example route to fetch company data
+// API endpoint to fetch all company data
 app.get('/company', (req, res) => {
-  db.query('SELECT * FROM company', (err, results) => {
+  const sqlQuery = 'SELECT * FROM company'; // Query to select all data from company table
+  db.query(sqlQuery, (err, result) => {
     if (err) {
       console.error('Error fetching company data:', err);
-      return res.status(500).json({ error: 'Failed to fetch data' });
+      res.status(500).send({ message: 'Database error' });
+    } else {
+      res.json(result); // Send back the result in JSON format
+      console.log(result);
     }
-    res.json(results);
   });
 });
 
-// Example route to fetch items
-app.get('/items', (req, res) => {
-  db.query('SELECT * FROM items', (err, results) => {
+// API endpoint to fetch product data based on item name and variety
+// app.get('/product', (req, res) => {
+//   const { item_name, variety } = req.query;
+
+//   // SQL query to select item_name, variety, and hsn from the product table where item_name and variety match
+//   const sqlQuery = 'SELECT item_name, variety, hsn FROM product WHERE item_name = ? AND variety = ?';
+  
+//   db.query(sqlQuery, [item_name, variety], (err, result) => {
+//     if (err) {
+//       console.error('Error fetching product data:', err);
+//       res.status(500).send({ message: 'Database error' });
+//     } else {
+//       res.json(result); // Send back the result in JSON format
+//       console.log(result);
+//     }
+//   });
+// });
+
+// API endpoint to get items
+app.get("/items", (req, res) => {
+  db.query("SELECT * FROM items", (err, results) => {
     if (err) {
-      console.error('Error fetching items data:', err);
-      return res.status(500).json({ error: 'Failed to fetch data' });
+      return res.status(500).json({ error: err.message });
     }
     res.json(results);
   });
 });
+// // API endpoint to fetch a specific company by ID
+// app.get('/api/company/:id', (req, res) => {
+//   const companyId = req.params.id;
+//   const sqlQuery = 'SELECT * FROM company WHERE companyid = ?';
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Backend server is running on http://localhost:${port}`);
-});
+//   db.query(sqlQuery, [companyId], (err, result) => {
+//     if (err) {
+//       console.error('Error fetching company data:', err);
+//       res.status(500).send({ message: 'Database error' });
+//     } else if (result.length === 0) {
+//       res.status(404).send({ message: 'Company not found' });
+//     } else {
+//       res.json(result[0]); // Send the company details as a JSON response
+//     }
+//   });
+// });
+
 // Serve the React build folder
 app.use(express.static(path.join(__dirname, 'build')));
 
@@ -72,122 +116,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
- 
-// const express = require('express');
-// require('dotenv').config();
-// const mysql = require('mysql2');
-// const cors = require('cors');
-// const bodyParser = require('body-parser');
-// const path = require('path');
-
-
-// const app = express();
-
-// // Middleware to parse JSON data
-// app.use(cors());
-// app.use(bodyParser.json());
-
-// // MySQL Database connection
-// // const db = mysql.createConnection({
-// //   host: 'localhost',     // Replace with your MySQL host
-// //   port: 3306,            // Replace with your MySQL port
-// //   user: 'root',          // Replace with your MySQL user
-// //   password: 'root',  // Replace with your MySQL password
-// //   database: 'company_db'      // Replace with your MySQL database name
-// // });
-// // const db = mysql.createConnection({
-// //   host: process.env.DB_HOST, // Use the environment variable
-// //   user: process.env.DB_USER,
-// //   password: process.env.DB_PASS,
-// //   database: process.env.DB_NAME,
-// // });
-  
-// const db = mysql.createConnection({
-//   host: process.env.MYSQL_ADDON_HOST,
-//   user: process.env.MYSQL_ADDON_USER,
-//   password: process.env.MYSQL_ADDON_PASSWORD,
-//   database: process.env.MYSQL_ADDON_DB,
-//   port: process.env.MYSQL_ADDON_PORT
-// });
-
-// // Connect to MySQL
-// db.connect((err) => {
-//   if (err) {
-//     console.log('Error connecting to MySQL:', err);
-//   } else {
-//     console.log('Connected to MySQL database');
-//   }
-// });
-
-// // API endpoint to fetch all company data
-// app.get('/company', (req, res) => {
-//   const sqlQuery = 'SELECT * FROM company'; // Query to select all data from company table
-//   db.query(sqlQuery, (err, result) => {
-//     if (err) {
-//       console.error('Error fetching company data:', err);
-//       res.status(500).send({ message: 'Database error' });
-//     } else {
-//       res.json(result); // Send back the result in JSON format
-//       console.log(result);
-//     }
-//   });
-// });
-
-// // API endpoint to fetch product data based on item name and variety
-// // app.get('/product', (req, res) => {
-// //   const { item_name, variety } = req.query;
-
-// //   // SQL query to select item_name, variety, and hsn from the product table where item_name and variety match
-// //   const sqlQuery = 'SELECT item_name, variety, hsn FROM product WHERE item_name = ? AND variety = ?';
-  
-// //   db.query(sqlQuery, [item_name, variety], (err, result) => {
-// //     if (err) {
-// //       console.error('Error fetching product data:', err);
-// //       res.status(500).send({ message: 'Database error' });
-// //     } else {
-// //       res.json(result); // Send back the result in JSON format
-// //       console.log(result);
-// //     }
-// //   });
-// // });
-
-// // API endpoint to get items
-// app.get("/items", (req, res) => {
-//   db.query("SELECT * FROM items", (err, results) => {
-//     if (err) {
-//       return res.status(500).json({ error: err.message });
-//     }
-//     res.json(results);
-//   });
-// });
-// // // API endpoint to fetch a specific company by ID
-// // app.get('/api/company/:id', (req, res) => {
-// //   const companyId = req.params.id;
-// //   const sqlQuery = 'SELECT * FROM company WHERE companyid = ?';
-
-// //   db.query(sqlQuery, [companyId], (err, result) => {
-// //     if (err) {
-// //       console.error('Error fetching company data:', err);
-// //       res.status(500).send({ message: 'Database error' });
-// //     } else if (result.length === 0) {
-// //       res.status(404).send({ message: 'Company not found' });
-// //     } else {
-// //       res.json(result[0]); // Send the company details as a JSON response
-// //     }
-// //   });
-// // });
-
-// // Serve the React build folder
-// app.use(express.static(path.join(__dirname, 'build')));
-
-// // Fallback for React Router
-// app.get('*', (req, res) => {
-//   res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
-// });
-
-// // Start the server
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
